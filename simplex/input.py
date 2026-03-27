@@ -13,16 +13,21 @@ Inequality = tuple[list[float], Literal["<", ">", "<=", ">="], float]
 # class GUI(tk.Tk):
 #     pass
 
-def inequalities_to_tableau(*inequality: Inequality, P: list[float]) -> tuple[str, list[float]]:
+def inequalities_to_tableau(*inequality: Inequality, P: list[float]) -> tuple[dict[str, list[float]], list[str], list[str]]:
     """
     Converts inequalities to a tableau, including the P function.
+
+    Returns the tableau, a list of all variables, and a list of all P variables.
     """
 
     inequalities = list(inequality)
 
     n_artificials = sum(1 for i in inequalities if i[1] in [">", ">="])
-    n_Pvars = len(inequalities[0])
+    n_Pvars = len(inequalities[0][0])
     n_ineqs = len(inequalities)
+
+    # Sort to prioritise artifical variables
+    inequalities.sort(key=lambda i: i[1] in [">", ">="], reverse=True)
 
     T = {}
 
@@ -55,4 +60,10 @@ def inequalities_to_tableau(*inequality: Inequality, P: list[float]) -> tuple[st
     p[:n_Pvars] = [-c for c in P]
     T["P"] = p
 
-    return T
+    # Calculate variable names
+    P_vars = [chr(i) for i in range(65, 65 + n_Pvars)]
+    s_vars = [f"s{i + 1}" for i in range(n_ineqs)]
+    a_vars = [f"a{i + 1}" for i in range(n_artificials)]
+    vars = P_vars + s_vars + a_vars + ["Value"]
+
+    return T, vars, P_vars
