@@ -1,13 +1,15 @@
 from simplex.tableau import Tableau
+from simplex.input import inequalities_to_tableau
 
 if __name__ == "__main__":
 
-    t = {
-        "a1" : [1, 1, 1, -1, 0, 0, 1, 0, 20],
-        "a2" : [2, -1, 2, 0, -1, 0, 0, 1, 25],
-        "s3" : [2, 3, 4, 0, 0, 1, 0, 0, 80],
-        "P" : [-2, -4, -3, 0, 0, 0, 0, 0, 0]
-    }
+    ineqs = (([1, 1, 1], ">", 20),
+             ([2, -1, 2], ">", 25),
+             ([2, 3, 4], "<", 80))
+    P = [2, 4, 3]
+
+    t = inequalities_to_tableau(*ineqs, P=P)
+    print(t)
 
     # These should be calculated from the input
     vars = ["x", "y", "z", "s1", "s2", "s3", "a1", "a2"]
