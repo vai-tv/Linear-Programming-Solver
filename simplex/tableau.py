@@ -14,8 +14,10 @@ class Tableau:
         self.variables = variables
         self.P_vars = P_vars # Always assume P variables are first
 
+        self.stage_2 = False
+
     def __str__(self):
-        max_len = 0
+        max_len = 5
         for k, v in self.T.items():
             for c in v:
                 max_len = max(max_len, len(str(round(c, 2))))
@@ -23,6 +25,7 @@ class Tableau:
         fmt = "{{:^{}}}".format(max_len)
         # Variables header
         s = " | ".join([fmt.format(v) for v in ["b.v."] + self.variables]) + "\n"
+        s += "-" * (len(s) - 1) + "\n"
 
         for k, v in self.T.items():
             s += fmt.format(k) + " | "
@@ -40,6 +43,11 @@ class Tableau:
         Adds the I (negative sum of all artificial variables) row to the tableau.
         """
 
+        # If there are no artificals, return
+        if not any(self.variables[i].startswith("a") for i in range(len(self.variables))):
+            self.stage_2 = True
+            return
+
         # Get all artificals
         a = {k: [0 if self.variables[i].startswith("a") else c for i, c in enumerate(v)] 
              for k, v in self.T.items() if k.startswith("a")}
@@ -48,14 +56,20 @@ class Tableau:
     
     def get_pivot(self) -> Pivot:
         """Returns the key of the row and index of the column to pivot on."""
+
+        is_stage_2 = not self.T.get("I")
         
         # 1. Identify the lowest coefficient in P or I
-        
-        X = self.T.get("I")
-        if not X: X = self.T.get("P")
+        if is_stage_2:
+            X = self.T["P"]
+        else:
+            X = self.T["I"]
 
-        # min_col = X.index(min(X[:len(self.P_vars)]))
-        min_col = X.index(min(X[:-1]))
+        # If in stage 2, only consider P variables
+        if is_stage_2:
+            min_col = X.index(min(X[:len(self.P_vars)]))
+        else:
+            min_col = X.index(min(X[:-1]))
 
         # Calculate all theta values and choose the minimum positive
         min_row = None
@@ -98,7 +112,7 @@ class Tableau:
         """
         Returns True if the value of I is 0.
         """
-        return self.T["I"][-1] == 0
+        return self.stage_2 or self.T["I"][-1] == 0
     
     def isoptimal(self) -> bool:
         """
@@ -112,6 +126,37 @@ class Tableau:
         Changes the tableau to stage 2 by removing the I row and all artificial variables.
         """
 
-        del self.T["I"]
+        if not self.stage_2:
+            del self.T["I"]
+
         self.T = {k: [c for i, c in enumerate(v) if not self.variables[i].startswith("a")] for k, v in self.T.items() if not k.startswith("a")}
         self.variables = [v for v in self.variables if not v.startswith("a")]
+        self.stage_2 = True
+
+    def solve(self) -> None:
+        """
+        Solves the linear programming problem.
+        """
+
+        while not self.is_stage_1_complete():
+            p = self.get_pivot()
+            
+            if not p[0]: # If no pivot is found, the problem has no solution
+                print("No feasible solution.")
+                return
+
+            self.apply_pivot(p)
+            print(self)
+
+        self.change_to_stage_2()
+        print(self)
+
+        while not self.isoptimal():
+            p = self.get_pivot()
+            self.apply_pivot(p)
+            print(self)
+
+        print("Problem has been solved.")
+        for bv, row in self.T.items():
+            value = int(row[-1]) if round(row[-1], 3).is_integer() else round(row[-1], 3)
+            print(f"{bv} = {value}")
