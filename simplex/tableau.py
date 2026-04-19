@@ -9,10 +9,13 @@ Pivot = tuple[str, int]
 
 class Tableau:
 
-    def __init__(self, tableau: TableauDict, variables: list[str] = None, P_vars: list[str] = None):
+    def __init__(self, tableau: TableauDict, variables: list[str] = None, P: list[float] = None):
         self.T = tableau
         self.variables = variables
-        self.P_vars = P_vars # Always assume P variables are first
+
+        self.P = P
+        
+        self.P_vars = [chr(65 + i) for i in range(len(P))]
 
         self.stage_2 = False
 
@@ -128,6 +131,11 @@ class Tableau:
 
         if not self.stage_2:
             del self.T["I"]
+            
+            # Add P function
+            p = [0] * len(self.variables) 
+            p[:len(self.P)] = [-c for c in self.P]
+            self.T["P"] = p
 
         self.T = {k: [c for i, c in enumerate(v) if not self.variables[i].startswith("a")] for k, v in self.T.items() if not k.startswith("a")}
         self.variables = [v for v in self.variables if not v.startswith("a")]
@@ -144,15 +152,18 @@ class Tableau:
             if not p[0]: # If no pivot is found, the problem has no solution
                 print("No feasible solution.")
                 return
-
+            
+            print(f"Pivot on column {p[1] + 1} of {p[0]}")
             self.apply_pivot(p)
             print(self)
 
+        print("Removing I")
         self.change_to_stage_2()
         print(self)
 
         while not self.isoptimal():
             p = self.get_pivot()
+            print(f"Pivot on column {p[1] + 1} of {p[0]}")
             self.apply_pivot(p)
             print(self)
 
