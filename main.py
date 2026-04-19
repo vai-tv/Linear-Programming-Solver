@@ -4,14 +4,13 @@ from simplex.input import inequalities_to_tableau
 if __name__ == "__main__":
 
     ineqs = (
-        ([1, 1], "<", 1000),
-        ([2, 1], "<", 1500),
-        ([3, 2], "<", 2400),
-        ([1, 1], ">", 800),
+        ([2, 3, 1], ">", 20),
+        ([1, 1, 2], "<", 30),
+        ([3, 2, 4], "<", 50),
         )
-    P = [1, 0.8]
+    P = [5, 3, 4]
 
-    t = Tableau(*inequalities_to_tableau(*ineqs, P=P))
+    t = Tableau(*inequalities_to_tableau(*ineqs), P)
     t.add_I()
     print(t)
 
