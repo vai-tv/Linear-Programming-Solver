@@ -13,11 +13,11 @@ Inequality = tuple[list[float], Literal["<", ">", "<=", ">="], float]
 # class GUI(tk.Tk):
 #     pass
 
-def inequalities_to_tableau(*inequality: Inequality, P: list[float]) -> tuple[dict[str, list[float]], list[str], list[str]]:
+def inequalities_to_tableau(*inequality: Inequality) -> tuple[dict[str, list[float]], list[str]]:
     """
-    Converts inequalities to a tableau, including the P function.
+    Converts inequalities to a tableau.
 
-    Returns the tableau, a list of all variables, and a list of all P variables.
+    Returns the tableau and a list of all variables.
     """
 
     inequalities = list(inequality)
@@ -55,15 +55,10 @@ def inequalities_to_tableau(*inequality: Inequality, P: list[float]) -> tuple[di
         else:
             raise ValueError(f"Invalid sign: {sign}")
 
-    # Add P function
-    p = [0] * (n_Pvars + n_ineqs + n_artificials + 1)
-    p[:n_Pvars] = [-c for c in P]
-    T["P"] = p
-
     # Calculate variable names
     P_vars = [chr(i) for i in range(65, 65 + n_Pvars)]
     s_vars = [f"s{i + 1}" for i in range(n_ineqs)]
     a_vars = [f"a{i + 1}" for i in range(n_artificials)]
     vars = P_vars + s_vars + a_vars + ["Value"]
 
-    return T, vars, P_vars
+    return T, vars
